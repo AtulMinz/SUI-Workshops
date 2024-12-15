@@ -29,3 +29,16 @@ fun int(ctx: &mut TxContext) {
     };
     transfer::transfer(admin, ctx.sender());
 }
+
+//Accessors to read struct fields
+public fun magic(self: &Sword) : u64 {
+    self.magic
+}
+
+public fun strenght(self: &Sword) : u64 {
+    self.strength
+}
+
+public fun swords_created(self: &Forge) : u64 {
+    self.swords_created
+}
