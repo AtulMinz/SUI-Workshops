@@ -54,7 +54,30 @@ public fun sword_create(magic: u64, strength: u64, ctx: &mut TxContext): Sword {
 
 
 #[test]
+fun test_sword_create() {
+    use sui::test_utils;
+    use sui::test_scenario;
+    
+    let magic: u64 = 42;
+    let strength: u64 = 7;
 
+    //sets up the context
+    let initial_owner = @0xCAFE;
+    let mut scenario = test_scenario::begin(initial_owner);
+
+    // Create the sword using the transaction context
+    let sword = sword_create(magic, strength, scenario.ctx());
+
+    // Assert that sword attributes match
+    test_utils::assert_eq(magic, sword.magic());
+    test_utils::assert_eq(strength, sword.strength());
+
+    // End the scenario (clean-up)
+    scenario.end();
+    test_utils::destroy(sword);
+}
+
+#[test]
 fun test_sword_transaction() {
     use sui::test_scenario;
 
