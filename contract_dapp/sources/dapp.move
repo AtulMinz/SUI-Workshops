@@ -47,9 +47,10 @@ public fun swords_created(self: &Forge) : u64 {
 
 #[test]
 
-public fun test_swords_create() {
+fun test_swords_create() {
     //create dummy for testing
     let mut ctx = tx_context::dummy();
+    let dummy_address = @0xCAFE;
 
     let sword = Sword{
         id: object::new(&mut ctx),
@@ -57,5 +58,7 @@ public fun test_swords_create() {
         strength: 7,
     };
  
-    assert!(sword.magic() == 42 && sword.strength() == 7, 1);
+    assert!(sword.magic() == 10 && sword.strength() == 7, 1);
+
+    transfer::public_transfer(sword, dummy_address);
 }
