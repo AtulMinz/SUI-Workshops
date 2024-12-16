@@ -22,6 +22,7 @@ public struct Forge has key {
 
 // Module initializer to be executed when this module is published
 
+#[allow(unused_function)]
 fun int(ctx: &mut TxContext) {
     let admin = Forge {
         id: object::new(ctx),
@@ -35,10 +36,26 @@ public fun magic(self: &Sword) : u64 {
     self.magic
 }
 
-public fun strenght(self: &Sword) : u64 {
+public fun strength(self: &Sword) : u64 {
     self.strength
 }
 
 public fun swords_created(self: &Forge) : u64 {
     self.swords_created
+}
+
+
+#[test]
+
+public fun test_swords_create() {
+    //create dummy for testing
+    let mut ctx = tx_context::dummy();
+
+    let sword = Sword{
+        id: object::new(&mut ctx),
+        magic: 10,
+        strength: 7,
+    };
+ 
+    assert!(sword.magic() == 42 && sword.strength() == 7, 1);
 }
