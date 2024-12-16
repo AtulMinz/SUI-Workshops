@@ -44,21 +44,48 @@ public fun swords_created(self: &Forge) : u64 {
     self.swords_created
 }
 
+public fun sword_create(magic: u64, strength: u64, ctx: &mut TxContext): Sword {
+    Sword {
+        id: object::new(ctx),
+        magic: magic,
+        strength: strength,
+    }
+}
+
 
 #[test]
 
-fun test_swords_create() {
-    //create dummy for testing
-    let mut ctx = tx_context::dummy();
-    let dummy_address = @0xCAFE;
+fun test_sword_transaction() {
+    use sui::test_scenario;
 
-    let sword = Sword{
-        id: object::new(&mut ctx),
-        magic: 10,
-        strength: 7,
+    //Test network
+    let initial_owner = @0xCAFE;
+    let final_owner = @0xFACE;
+
+    //Initial Transaction
+    let mut scenario = test_scenario::begin(initial_owner);
+    {
+        //create sword and transfer to initial owner
+        let sword = sword_create(42, 7, scenario.ctx());
+        transfer::public_transfer(sword, initial_owner);
     };
- 
-    assert!(sword.magic() == 10 && sword.strength() == 7, 1);
 
-    transfer::public_transfer(sword, dummy_address);
+    //Second Transaction
+    scenario.next_tx(initial_owner); 
+    {
+        //Extract the sword owned by initial owner
+        let sword = scenario.take_from_sender<Sword>();
+        transfer::public_transfer(sword, final_owner);
+    };
+
+    //Third Transaction by final owner
+    scenario.next_tx(final_owner);
+    {
+        let sword = scenario.take_from_sender<Sword>();
+        //verify sword properties
+        assert!(sword.magic == 42 && sword.strength == 7, 1);
+        //Retrun the sword to the object pool
+        scenario.return_to_sender(sword);
+    };
+    scenario.end();
 }
