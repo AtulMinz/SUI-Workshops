@@ -23,7 +23,7 @@ public struct Forge has key {
 // Module initializer to be executed when this module is published
 
 #[allow(unused_function)]
-fun int(ctx: &mut TxContext) {
+fun init(ctx: &mut TxContext) {
     let admin = Forge {
         id: object::new(ctx),
         swords_created:0,
@@ -52,28 +52,38 @@ public fun sword_create(magic: u64, strength: u64, ctx: &mut TxContext): Sword {
     }
 }
 
+//To check the Forge working
+public fun new_sword(forge: &mut Forge, magic: u64, strength: u64, ctx: &mut TxContext): Sword {
+    forge.swords_created = forge.swords_created + 1;
+    Sword {
+        id: object::new(ctx),
+        magic: magic,
+        strength: strength,
+    }
+}
+
 
 #[test]
+//Using test_utils i.e. can be done with test_scenario or without any module.
 fun test_sword_create() {
     use sui::test_utils;
-    use sui::test_scenario;
+    // use sui::test_scenario;
     
     let magic: u64 = 42;
     let strength: u64 = 7;
 
     //sets up the context
-    let initial_owner = @0xCAFE;
-    let mut scenario = test_scenario::begin(initial_owner);
+    // let initial_owner = @0xCAFE;
+    let mut ctx = tx_context::dummy();
 
     // Create the sword using the transaction context
-    let sword = sword_create(magic, strength, scenario.ctx());
+    let sword = sword_create(magic, strength, &mut ctx);
 
     // Assert that sword attributes match
     test_utils::assert_eq(magic, sword.magic());
     test_utils::assert_eq(strength, sword.strength());
 
     // End the scenario (clean-up)
-    scenario.end();
     test_utils::destroy(sword);
 }
 
@@ -109,6 +119,35 @@ fun test_sword_transaction() {
         assert!(sword.magic == 42 && sword.strength == 7, 1);
         //Retrun the sword to the object pool
         scenario.return_to_sender(sword);
+    };
+    scenario.end();
+}
+
+#[test]
+fun test_module_init() {
+    use sui::test_scenario;
+
+    let admin = @0xAD;
+    let initial_owner = @0xCAFE;
+
+    let mut scenario = test_scenario::begin(admin);
+    {
+        init(scenario.ctx());
+    };
+
+    scenario.next_tx(admin);
+    {
+        let forge = scenario.take_from_sender<Forge>();
+        assert!(forge.swords_created() == 0,1);
+        scenario.return_to_sender(forge);
+    };
+
+    scenario.next_tx(admin);
+    {
+        let mut forge = scenario.take_from_sender<Forge>();
+        let sword = forge.new_sword(42, 7, scenario.ctx());
+        transfer::public_transfer(sword, initial_owner);
+        scenario.return_to_sender(forge);
     };
     scenario.end();
 }
