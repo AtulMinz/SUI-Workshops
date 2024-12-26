@@ -1,2 +1,2 @@
-# SUI Workshop
+# SUI Developer Workshop
 
